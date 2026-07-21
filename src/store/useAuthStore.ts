@@ -17,13 +17,24 @@ interface AuthState {
   setOnlineUsers: (users: User[]) => void;
 }
 
+const loadUser = (): User | null => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('lyra-user');
+    if (saved) return JSON.parse(saved);
+  }
+  return null;
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  onlineUsers: [
-    { id: 'user-demo-456', username: 'Alex_Explorer', email: 'alex@lyra.network', status: 'online' },
-    { id: 'user-demo-789', username: 'Elena_Nav', email: 'elena@lyra.network', status: 'online' }
-  ],
-  login: (user) => set({ user }),
-  logout: () => set({ user: null }),
+  user: loadUser(),
+  onlineUsers: [],
+  login: (user) => set(() => {
+    if (typeof window !== 'undefined') localStorage.setItem('lyra-user', JSON.stringify(user));
+    return { user };
+  }),
+  logout: () => set(() => {
+    if (typeof window !== 'undefined') localStorage.removeItem('lyra-user');
+    return { user: null };
+  }),
   setOnlineUsers: (users) => set({ onlineUsers: users }),
 }));

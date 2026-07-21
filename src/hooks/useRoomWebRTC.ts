@@ -39,9 +39,11 @@ export const useRoomWebRTC = () => {
 
   // Called when joining a room and getting the list of existing users
   const joinRoomCall = useCallback((existingUsers: User[], stream: MediaStream) => {
+    const mySocketId = socket.id;
+    if (!mySocketId) return;
     existingUsers.forEach(existingUser => {
-      if (existingUser.socketId && existingUser.socketId !== socket.id) {
-        const peer = createPeer(existingUser.socketId, socket.id, stream);
+      if (existingUser.socketId && existingUser.socketId !== mySocketId) {
+        const peer = createPeer(existingUser.socketId, mySocketId, stream);
         peersRef.current[existingUser.socketId] = peer;
       }
     });

@@ -15,20 +15,18 @@ export const useWebRTC = () => {
   const peerRef = useRef<Peer.Instance | null>(null);
 
   useEffect(() => {
-    socket.on('callUser', async ({ from, signal }) => {
-      // Find the user who is calling us from onlineUsers
-      const callerUser = useAuthStore.getState().onlineUsers.find(u => u.socketId === from);
+    socket.on('callUser', async ({ from, signal, callerUser }) => {
       if (callerUser) {
         setParticipants(callerUser, user);
         setCallStatus('incoming');
         
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
           setStreams(stream, null);
           // Store their signal to accept later
           (window as any).incomingSignal = signal;
         } catch (err) {
-          console.error("Failed to get local audio", err);
+          console.error("Failed to get local audio/video", err);
         }
       }
     });
@@ -70,7 +68,7 @@ export const useWebRTC = () => {
 
   const startCall = useCallback(async (userToCall: User) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setStreams(stream, null);
       setParticipants(user, userToCall);
       setCallStatus('outgoing');
@@ -86,6 +84,7 @@ export const useWebRTC = () => {
           userToCall: (userToCall as any).socketId,
           signalData: data,
           from: socket.id,
+          callerUser: user,
         });
       });
 

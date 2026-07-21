@@ -14,6 +14,7 @@ interface AuthState {
   onlineUsers: User[];
   login: (user: User) => void;
   logout: () => void;
+  updateUser: (data: Partial<User>) => void;
   setOnlineUsers: (users: User[]) => void;
 }
 
@@ -35,6 +36,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => set(() => {
     if (typeof window !== 'undefined') localStorage.removeItem('lyra-user');
     return { user: null };
+  }),
+  updateUser: (data) => set((state) => {
+    if (!state.user) return { user: null };
+    const updatedUser = { ...state.user, ...data };
+    if (typeof window !== 'undefined') localStorage.setItem('lyra-user', JSON.stringify(updatedUser));
+    return { user: updatedUser };
   }),
   setOnlineUsers: (users) => set({ onlineUsers: users }),
 }));

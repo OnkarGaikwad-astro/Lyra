@@ -15,9 +15,11 @@ export const CallScreen = () => {
   const isActive = status === 'connected';
   const otherUser = caller?.id === user?.id ? receiver : caller;
 
-  const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
   const [isLoudspeaker, setIsLoudspeaker] = useState(false);
   const [audioOutputs, setAudioOutputs] = useState<MediaDeviceInfo[]>([]);
   const [callDuration, setCallDuration] = useState(0);
@@ -60,10 +62,16 @@ export const CallScreen = () => {
   }, [status, otherUser, isIncoming, addCallLog]);
 
   useEffect(() => {
-    if (remoteStream && remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = remoteStream;
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
     }
-  }, [remoteStream]);
+  }, [remoteStream, status]);
+
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream, status]);
 
   useEffect(() => {
     // Fetch available audio output devices and default to earpiece if available
@@ -72,10 +80,10 @@ export const CallScreen = () => {
         const outputs = devices.filter(d => d.kind === 'audiooutput');
         setAudioOutputs(outputs);
         
-        if (outputs.length > 0 && remoteAudioRef.current && typeof (remoteAudioRef.current as any).setSinkId === 'function') {
+        if (outputs.length > 0 && remoteVideoRef.current && typeof (remoteVideoRef.current as any).setSinkId === 'function') {
           const earpiece = outputs.find(d => d.label.toLowerCase().includes('earpiece') || d.label.toLowerCase().includes('phone'));
           if (earpiece) {
-            (remoteAudioRef.current as any).setSinkId(earpiece.deviceId).catch(console.error);
+            (remoteVideoRef.current as any).setSinkId(earpiece.deviceId).catch(console.error);
             setIsLoudspeaker(false);
           } else {
             setIsLoudspeaker(true);
@@ -99,7 +107,7 @@ export const CallScreen = () => {
   };
 
   const toggleSpeaker = async () => {
-    if (remoteAudioRef.current && typeof (remoteAudioRef.current as any).setSinkId === 'function' && audioOutputs.length > 0) {
+    if (remoteVideoRef.current && typeof (remoteVideoRef.current as any).setSinkId === 'function' && audioOutputs.length > 0) {
       const targetMode = !isLoudspeaker;
       const targetDevice = audioOutputs.find(d => {
          const label = d.label.toLowerCase();
@@ -108,7 +116,7 @@ export const CallScreen = () => {
 
       if (targetDevice) {
          try {
-           await (remoteAudioRef.current as any).setSinkId(targetDevice.deviceId);
+           await (remoteVideoRef.current as any).setSinkId(targetDevice.deviceId);
            setIsLoudspeaker(targetMode);
            return;
          } catch (e) {
@@ -168,58 +176,51 @@ export const CallScreen = () => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 sm:p-12"
+        className="w-full h-full flex flex-col relative rounded-2xl overflow-hidden bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_10px_40px_rgba(0,0,0,0.5)]"
       >
-        <audio ref={remoteAudioRef} autoPlay />
 
-        {/* The Calling Window - Perfect Border & Mobile Responsive */}
-        <motion.div 
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          className="relative w-full max-w-2xl aspect-[3/4] sm:aspect-square md:aspect-[4/3] rounded-[2rem] overflow-hidden flex flex-col p-6 md:p-10 bg-cover bg-center"
-          style={{ 
-            backgroundImage: `url('/call_bg.png?v=${bgCacheBuster}')`,
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.15), 0 30px 60px rgba(0,0,0,0.8)'
-          }}
-        >
-          {/* Dark overlay inside the window for contrast against the image */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" />
 
-          {isActive && (
-            <button 
-              onClick={() => setMinimized(true)}
-              className="absolute top-4 right-4 p-3 text-white/50 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all z-20 backdrop-blur-sm border border-white/5 hover:border-white/20"
-            >
-              <Minimize2 className="w-5 h-5" />
-            </button>
-          )}
+        {/* Background Layer: Remote Video or Fallback Image */}
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('/call_bg.png?v=${bgCacheBuster}')` }} />
+        {remoteStream && (
+          <video 
+            ref={remoteVideoRef} 
+            autoPlay 
+            playsInline 
+            className="absolute inset-0 w-full h-full object-cover bg-black" 
+          />
+        )}
 
-          <div className="relative z-10 flex flex-col h-full justify-between">
-            {/* Top Section: Avatar & Details */}
-            <div className="flex flex-col items-center mt-4 md:mt-10">
+          {/* Dark overlay inside the window for contrast against the image (only if not active video) */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col h-full justify-between p-4 md:p-8">
+          {/* Top Section: Avatar & Details */}
+          <div className="flex flex-col items-center mt-2 md:mt-4">
               
-              {/* Avatar Wrapper */}
-              <div className="relative flex items-center justify-center mb-6 w-28 h-28 md:w-32 md:h-32">
-                <VoiceVisualizer stream={isActive ? remoteStream : null} isActive={isActive} />
-                <motion.div 
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  className="relative z-10 w-full h-full rounded-full overflow-hidden bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl"
-                >
-                {otherUser?.avatar_url ? (
-                  <img src={otherUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <h2 className="text-4xl md:text-5xl font-light text-white drop-shadow-md">
-                    {otherUser?.username ? otherUser.username.charAt(0).toUpperCase() : '?'}
-                  </h2>
-                )}
-                </motion.div>
-              </div>
+              {/* Avatar Wrapper (Only show if not connected or no remote stream) */}
+              {(!isActive || !remoteStream) && (
+                <div className="relative flex items-center justify-center mb-6 w-28 h-28 md:w-32 md:h-32">
+                  <VoiceVisualizer stream={isActive ? remoteStream : null} isActive={isActive} />
+                  <motion.div 
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="relative z-10 w-full h-full rounded-full overflow-hidden bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl"
+                  >
+                  {otherUser?.avatar_url ? (
+                    <img src={otherUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <h2 className="text-4xl md:text-5xl font-light text-white drop-shadow-md">
+                      {otherUser?.username ? otherUser.username.charAt(0).toUpperCase() : '?'}
+                    </h2>
+                  )}
+                  </motion.div>
+                </div>
+              )}
               
               {!isActive && (
                 <h2 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-red-400 uppercase mb-2 drop-shadow-md text-center">
@@ -286,8 +287,20 @@ export const CallScreen = () => {
               )}
             </div>
           </div>
+          
+          {/* Local Video Picture-in-Picture */}
+          {localStream && (
+            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-24 md:w-32 aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-2xl border border-white/20 z-30">
+              <video 
+                ref={localVideoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+          )}
         </motion.div>
-      </motion.div>
     </AnimatePresence>
   );
 };

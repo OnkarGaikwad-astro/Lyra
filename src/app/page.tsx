@@ -13,10 +13,16 @@ export default function LandingPage() {
 
   const handleJoin = () => {
     if (name.trim()) {
+      let deviceId = localStorage.getItem('lyra-device-id');
+      if (!deviceId) {
+        deviceId = `user-${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('lyra-device-id', deviceId);
+      }
+      
       login({
-        id: `user-${Math.random().toString(36).substr(2, 9)}`,
+        id: deviceId,
         username: name.trim(),
-        email: `${name.trim().toLowerCase()}@lyra.network`,
+        email: `${name.trim().toLowerCase().replace(/\\s+/g, '')}@lyra.network`,
         status: 'online'
       });
       router.push('/dashboard');

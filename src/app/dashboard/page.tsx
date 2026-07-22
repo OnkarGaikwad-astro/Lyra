@@ -32,6 +32,12 @@ export default function DashboardPage() {
         {/* Left Sidebar (Command Center) */}
         <div className="lg:col-span-1 space-y-6 flex flex-col">
           
+          {/* Brand Header */}
+          <div className="flex items-center gap-3 px-2 py-1">
+            <img src="/icon.png" alt="Orion" className="w-8 h-8 rounded-[25%] object-cover shadow-lg" />
+            <span className="text-xl font-light tracking-[0.2em] text-white">ORION</span>
+          </div>
+
           {/* User Profile Panel */}
           <div className="p-6 liquid-panel flex flex-col gap-4">
             <div className="flex justify-between items-start">

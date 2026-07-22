@@ -20,7 +20,7 @@ interface AuthState {
 
 const loadUser = (): User | null => {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('lyra-user');
+    const saved = localStorage.getItem('orion-user');
     if (saved) return JSON.parse(saved);
   }
   return null;
@@ -30,17 +30,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: loadUser(),
   onlineUsers: [],
   login: (user) => set(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('lyra-user', JSON.stringify(user));
+    if (typeof window !== 'undefined') localStorage.setItem('orion-user', JSON.stringify(user));
     return { user };
   }),
   logout: () => set(() => {
-    if (typeof window !== 'undefined') localStorage.removeItem('lyra-user');
+    if (typeof window !== 'undefined') localStorage.removeItem('orion-user');
     return { user: null };
   }),
   updateUser: (data) => set((state) => {
     if (!state.user) return { user: null };
     const updatedUser = { ...state.user, ...data };
-    if (typeof window !== 'undefined') localStorage.setItem('lyra-user', JSON.stringify(updatedUser));
+    if (typeof window !== 'undefined') localStorage.setItem('orion-user', JSON.stringify(updatedUser));
     return { user: updatedUser };
   }),
   setOnlineUsers: (users) => set({ onlineUsers: users }),

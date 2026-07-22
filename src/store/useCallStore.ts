@@ -35,7 +35,7 @@ interface CallState {
 
 const loadHistory = (): CallLog[] => {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('lyra-call-history');
+    const saved = localStorage.getItem('orion-call-history');
     if (saved) return JSON.parse(saved);
   }
   return [];
@@ -61,7 +61,7 @@ export const useCallStore = create<CallState>((set) => ({
     };
     const updatedHistory = [newLog, ...state.callHistory].slice(0, 50); // Keep last 50
     if (typeof window !== 'undefined') {
-      localStorage.setItem('lyra-call-history', JSON.stringify(updatedHistory));
+      localStorage.setItem('orion-call-history', JSON.stringify(updatedHistory));
     }
     return { callHistory: updatedHistory };
   }),

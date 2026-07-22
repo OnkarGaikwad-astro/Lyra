@@ -53,7 +53,7 @@ export const MatchHub = () => {
   }
 
   return (
-    <div className="w-full h-[600px] liquid-panel p-6 flex flex-col relative overflow-hidden">
+    <div className="w-full h-[75vh] min-h-[500px] liquid-panel p-6 flex flex-col relative overflow-hidden">
       
       {/* --- IDLE STATE --- */}
       {status === 'idle' && (
@@ -150,14 +150,21 @@ export const MatchHub = () => {
             </div>
           </div>
 
-          {/* Chat and Video Area */}
-          <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4">
+          {/* Call + Chat — side by side on desktop, full screen on mobile */}
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 overflow-hidden">
             {callStatus !== 'idle' && (
-              <div className="flex-[2] h-full">
-                <CallScreen />
-              </div>
+              <>
+                {/* Mobile: full screen overlay */}
+                <div className="fixed inset-0 z-50 lg:hidden">
+                  <CallScreen />
+                </div>
+                {/* Desktop: side panel */}
+                <div className="hidden lg:block lg:flex-[2] lg:h-full min-h-0">
+                  <CallScreen />
+                </div>
+              </>
             )}
-            <div className="flex-1 h-full lg:min-w-[320px]">
+            <div className={`min-h-0 lg:flex-1 lg:min-w-[260px] ${callStatus !== 'idle' ? 'hidden lg:flex lg:flex-col' : 'flex flex-col flex-1'}`}>
               <ChatPanel />
             </div>
           </div>

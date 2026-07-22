@@ -180,142 +180,127 @@ export const CallScreen = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.3 }}
-        className="w-full h-full flex flex-col relative rounded-2xl overflow-hidden bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_10px_40px_rgba(0,0,0,0.5)]"
+        className="w-full h-full flex flex-col relative rounded-none lg:rounded-2xl overflow-hidden bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.15),0_10px_40px_rgba(0,0,0,0.5)]"
       >
 
 
-        {/* Background Layer: Remote Video or Fallback Image */}
+        {/* FULL BG: Remote Video or fallback */}
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('/call_bg.png?v=${bgCacheBuster}')` }} />
         {remoteStream && (
-          <video 
-            ref={remoteVideoRef} 
-            autoPlay 
-            playsInline 
-            className="absolute inset-0 w-full h-full object-cover bg-black" 
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectFit: 'cover' }}
           />
         )}
 
-          {/* Dark overlay inside the window for contrast against the image (only if not active video) */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-none" />
+        {/* Overlay when no remote video */}
+        <div className={`absolute inset-0 pointer-events-none transition-all ${(!isActive || !remoteStream) ? 'bg-black/60 backdrop-blur-md' : 'bg-black/10'}`} />
 
-        <div className="relative z-10 flex flex-col h-full justify-between p-4 md:p-8">
-          {/* Top Section: Avatar & Details */}
-          <div className="flex flex-col items-center mt-2 md:mt-4">
-              
-              {/* Avatar Wrapper (Only show if not connected or no remote stream) */}
-              {(!isActive || !remoteStream) && (
-                <div className="relative flex items-center justify-center mb-6 w-28 h-28 md:w-32 md:h-32">
-                  <VoiceVisualizer stream={isActive ? remoteStream : null} isActive={isActive} />
-                  <motion.div 
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="relative z-10 w-full h-full rounded-full overflow-hidden bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl"
-                  >
-                  {otherUser?.avatar_url ? (
-                    <img src={otherUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <h2 className="text-4xl md:text-5xl font-light text-white drop-shadow-md">
-                      {otherUser?.username ? otherUser.username.charAt(0).toUpperCase() : '?'}
-                    </h2>
-                  )}
-                  </motion.div>
-                </div>
-              )}
-              
-              {!isActive && (
-                <h2 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-red-400 uppercase mb-2 drop-shadow-md text-center">
-                  {isIncoming ? 'Incoming Signal' : 'Establishing Connection...'}
-                </h2>
-              )}
-              <h1 className="text-3xl md:text-4xl font-light text-white mb-2 tracking-wide drop-shadow-lg text-center break-all px-4">{otherUser?.username}</h1>
-              
-              {isActive && (
-                <div className="flex flex-col items-center gap-2 mt-4">
-                  <div className="text-sm md:text-base font-light text-white/80 tracking-[0.2em] font-mono drop-shadow-md">
-                    {formatTime(callDuration)}
-                  </div>
-                  <div className="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-lg">
-                    <span className="w-2.5 h-2.5 rounded-full indicator-primary shadow-[0_0_10px_red]"></span>
-                    <p className="text-red-400 font-mono tracking-widest uppercase text-[10px] md:text-xs font-bold">Secure Connection</p>
-                  </div>
-                </div>
-              )}
+        {/* Avatar when no video */}
+        {(!isActive || !remoteStream) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10 pb-36">
+            <div className="relative flex items-center justify-center mb-4 w-28 h-28 md:w-36 md:h-36">
+              <VoiceVisualizer stream={isActive ? remoteStream : null} isActive={isActive} />
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="relative z-10 w-full h-full rounded-full overflow-hidden bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl"
+              >
+                {otherUser?.avatar_url ? (
+                  <img src={otherUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <h2 className="text-4xl md:text-5xl font-light text-white drop-shadow-md">
+                    {otherUser?.username ? otherUser.username.charAt(0).toUpperCase() : '?'}
+                  </h2>
+                )}
+              </motion.div>
             </div>
-
-            {/* Bottom Section: Controls */}
-            <div className="w-full flex justify-center gap-6 md:gap-8 pb-4 md:pb-0">
-              {isIncoming ? (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => declineCallAction?.()}
-                    className="w-16 h-16 flex items-center justify-center backdrop-blur-md bg-red-500/20 border border-red-500 hover:bg-red-600 rounded-full text-red-500 hover:text-white transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-                  >
-                    <PhoneOff className="w-6 h-6" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => answerCallAction?.()}
-                    className="w-16 h-16 flex items-center justify-center backdrop-blur-md bg-emerald-500/20 border border-emerald-500 hover:bg-emerald-600 rounded-full text-emerald-500 hover:text-white transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                  >
-                    <Phone className="w-6 h-6" />
-                  </motion.button>
-                </>
-              ) : (
-                <>
-                  <ControlBtn 
-                    icon={isMuted ? MicOff : Mic} 
-                    active={!isMuted} 
-                    onClick={toggleMute} 
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => leaveCallAction?.()}
-                    className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-red-600 hover:bg-red-500 rounded-full shadow-[0_0_30px_rgba(220,38,38,0.5)] text-white mx-1 md:mx-2 transition-colors self-center"
-                  >
-                    <PhoneOff className="w-7 h-7 md:w-8 md:h-8" />
-                  </motion.button>
-                  <ControlBtn 
-                    icon={isLoudspeaker ? Volume2 : Volume1} 
-                    active={isLoudspeaker} 
-                    onClick={toggleSpeaker} 
-                  />
-                </>
-              )}
-            </div>
+            {!isActive && (
+              <p className="text-xs font-bold tracking-[0.2em] text-red-400 uppercase drop-shadow-md text-center">
+                {isIncoming ? 'Incoming Signal' : 'Establishing Connection...'}
+              </p>
+            )}
           </div>
-          
-          {/* Local Video Picture-in-Picture */}
-          {localStream && (
-            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-24 md:w-32 aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-2xl border border-white/20 z-30">
-              <video 
-                ref={localVideoRef} 
-                autoPlay 
-                playsInline 
-                muted 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-          )}
+        )}
+
+        {/* Local PiP — top right corner */}
+        {localStream && (
+          <div className="absolute top-3 right-3 z-20 w-24 md:w-28 aspect-[9/16] bg-black rounded-xl overflow-hidden border border-white/20 shadow-2xl">
+            <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        {/* FLOATING BOTTOM CONTROL BAR */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 px-4 py-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+          {/* Name & Status */}
+          <div className="mb-3 flex items-center gap-2">
+            <h1 className="text-white font-semibold text-base truncate">{otherUser?.username}</h1>
+            {isActive && (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_6px_red] shrink-0"></span>
+                <span className="text-[10px] text-red-400 font-mono tracking-widest font-bold">SECURE</span>
+                <span className="text-[10px] text-white/40 font-mono ml-1">{formatTime(callDuration)}</span>
+              </>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center gap-3">
+            {isIncoming ? (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => declineCallAction?.()}
+                  className="flex-1 h-12 flex items-center justify-center gap-2 rounded-2xl bg-black/60 backdrop-blur-md border border-red-500/60 hover:bg-red-600 text-red-400 hover:text-white transition-all text-sm font-semibold"
+                >
+                  <PhoneOff className="w-4 h-4" />
+                  <span>Decline</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => answerCallAction?.()}
+                  className="flex-1 h-12 flex items-center justify-center gap-2 rounded-2xl bg-black/60 backdrop-blur-md border border-emerald-500/60 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-sm font-semibold"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>Answer</span>
+                </motion.button>
+              </>
+            ) : (
+              <>
+                <ControlBtn icon={isMuted ? MicOff : Mic} active={!isMuted} onClick={toggleMute} label={isMuted ? 'Unmute' : 'Mute'} />
+                <motion.button
+                  whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => leaveCallAction?.()}
+                  className="flex-[1.4] h-12 flex items-center justify-center gap-2 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm shadow-[0_0_25px_rgba(220,38,38,0.5)] transition-colors"
+                >
+                  <PhoneOff className="w-4 h-4" />
+                  <span>End Call</span>
+                </motion.button>
+                <ControlBtn icon={isLoudspeaker ? Volume2 : Volume1} active={isLoudspeaker} onClick={toggleSpeaker} label={isLoudspeaker ? 'Speaker' : 'Earpiece'} />
+              </>
+            )}
+          </div>
+        </div>
         </motion.div>
     </AnimatePresence>
   );
 };
 
-const ControlBtn = ({ icon: Icon, active, onClick }: { icon: any, active: boolean, onClick?: () => void }) => (
+const ControlBtn = ({ icon: Icon, active, onClick, label }: { icon: any, active: boolean, onClick?: () => void, label?: string }) => (
   <motion.button
     onClick={onClick}
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.9 }}
-    className={`w-14 h-14 rounded-full flex items-center justify-center self-center transition-all ${
+    whileHover={{ scale: 1.03 }}
+    whileTap={{ scale: 0.97 }}
+    className={`flex-1 h-12 flex items-center justify-center gap-2 rounded-2xl text-sm font-semibold tracking-wide transition-all ${
       active 
-        ? 'liquid-button !bg-white/10 hover:!bg-white/20 text-white border-white/20' 
-        : 'liquid-button !bg-black/60 border-red-500/50 text-red-500'
+        ? 'bg-white/10 hover:bg-white/20 text-white border border-white/15' 
+        : 'bg-black/60 border border-red-500/40 text-red-400 hover:bg-red-500/10'
     }`}
   >
-    <Icon className="w-5 h-5" />
+    <Icon className="w-4 h-4" />
+    {label && <span className="hidden sm:inline text-xs">{label}</span>}
   </motion.button>
 );

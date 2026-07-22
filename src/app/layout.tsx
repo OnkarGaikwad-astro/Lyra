@@ -9,7 +9,7 @@ const josefin = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Lyra - Voice Communication",
+  title: "Orion - Voice Communication",
   description: "Connect voices beyond distance.",
 };
 
